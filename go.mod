@@ -1,5 +1,5 @@
-module demo
+module github.com/blue-script/url-shortener
 
 go 1.25.4
 
-require github.com/joho/godotenv v1.5.1 // indirect
+require github.com/joho/godotenv v1.5.1

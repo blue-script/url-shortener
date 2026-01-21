@@ -1,16 +1,19 @@
 package main
 
 import (
-	"demo/configs"
-	"demo/internal/hello"
 	"fmt"
 	"net/http"
+
+	"github.com/blue-script/url-shortener/configs"
+	"github.com/blue-script/url-shortener/internal/auth"
 )
 
 func main() {
 	conf := configs.LoadConfig()
 	router := http.NewServeMux()
-	hello.NewHelloHandler(router)
+	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
+		Config: conf,
+	})
 
 	server := http.Server{
 		Addr:    ":8081",
