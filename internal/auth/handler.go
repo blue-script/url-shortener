@@ -27,6 +27,10 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println(handler.Config.Auth.Secret)
 		fmt.Println("Login")
+		res := LoginResponse{
+			Token: "123",
+		}
+		w
 	}
 }
 
