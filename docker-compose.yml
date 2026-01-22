@@ -1,0 +1,13 @@
+services:
+  postgres:
+    container_name: postgres_go_shortener
+    image: postgres:18.1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: my_pass
+      POSTGRES_DB: postgres
+      PGDATA: /data/postgres
+    volumes:
+      - ./postgres-data:/data/postgres
+    ports:
+      - "5432:5432"

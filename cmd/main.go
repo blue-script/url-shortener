@@ -6,10 +6,12 @@ import (
 
 	"github.com/blue-script/url-shortener/configs"
 	"github.com/blue-script/url-shortener/internal/auth"
+	"github.com/blue-script/url-shortener/pkg/db"
 )
 
 func main() {
 	conf := configs.LoadConfig()
+	_ = db.NewDb(conf)
 	router := http.NewServeMux()
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
 		Config: conf,
