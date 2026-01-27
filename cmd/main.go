@@ -8,6 +8,7 @@ import (
 	"github.com/blue-script/url-shortener/internal/auth"
 	"github.com/blue-script/url-shortener/internal/link"
 	"github.com/blue-script/url-shortener/pkg/db"
+	"github.com/blue-script/url-shortener/pkg/middleware"
 )
 
 func main() {
@@ -26,11 +27,17 @@ func main() {
 		LinkRepository: linkRepository,
 	})
 
+	// Middlewares
+	stack := middleware.Chain(
+		middleware.CORS,
+		middleware.Logging,
+	)
+
 	server := http.Server{
 		Addr:    ":8081",
-		Handler: router,
+		Handler: stack(router),
 	}
 
-	fmt.Println("Server is lintening on port 8081")
+	fmt.Println("Server is listening on port 8081")
 	server.ListenAndServe()
 }
