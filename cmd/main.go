@@ -7,6 +7,7 @@ import (
 	"github.com/blue-script/url-shortener/configs"
 	"github.com/blue-script/url-shortener/internal/auth"
 	"github.com/blue-script/url-shortener/internal/link"
+	"github.com/blue-script/url-shortener/internal/user"
 	"github.com/blue-script/url-shortener/pkg/db"
 	"github.com/blue-script/url-shortener/pkg/middleware"
 )
@@ -18,10 +19,15 @@ func main() {
 
 	// Repositories
 	linkRepository := link.NewLinkRepository(db)
+	userRepository := user.NewUserRepository(db)
+
+	// Services
+	authService := auth.NewAuthService(userRepository)
 
 	// Handler
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
-		Config: conf,
+		Config:      conf,
+		AuthService: authService,
 	})
 	link.NewLinkHandler(router, link.LinkHandlerDeps{
 		LinkRepository: linkRepository,

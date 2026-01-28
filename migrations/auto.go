@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/blue-script/url-shortener/internal/link"
+	"github.com/blue-script/url-shortener/internal/user"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -19,5 +20,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	db.AutoMigrate(&link.Link{})
+	db.AutoMigrate(&link.Link{}, &user.User{})
 }
