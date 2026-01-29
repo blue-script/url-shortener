@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/blue-script/url-shortener/configs"
 	"github.com/blue-script/url-shortener/internal/auth"
@@ -11,6 +13,19 @@ import (
 	"github.com/blue-script/url-shortener/pkg/db"
 	"github.com/blue-script/url-shortener/pkg/middleware"
 )
+
+func tickOperation(ctx context.Context) {
+	ticker := time.NewTicker(200 * time.Millisecond)
+	for {
+		select {
+		case <-ticker.C:
+			fmt.Println("Tick")
+		case <-ctx.Done():
+			fmt.Println("Cancel")
+			return
+		}
+	}
+}
 
 func main() {
 	conf := configs.LoadConfig()
@@ -31,6 +46,7 @@ func main() {
 	})
 	link.NewLinkHandler(router, link.LinkHandlerDeps{
 		LinkRepository: linkRepository,
+		Config:         conf,
 	})
 
 	// Middlewares

@@ -42,7 +42,7 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 			return
 		}
 
-		jwtToken, err := jwt.NewJWT(handler.Config.Auth.Secret).Create(email)
+		jwtToken, err := jwt.NewJWT(handler.Config.Auth.Secret).Create(jwt.JWTData{Email: email})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -68,7 +68,7 @@ func (handler *AuthHandler) Register() http.HandlerFunc {
 			return
 		}
 
-		jwtToken, err := jwt.NewJWT(handler.Config.Auth.Secret).Create(email)
+		jwtToken, err := jwt.NewJWT(handler.Config.Auth.Secret).Create(jwt.JWTData{Email: email})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
