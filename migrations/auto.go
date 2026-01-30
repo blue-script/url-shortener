@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/blue-script/url-shortener/internal/link"
+	"github.com/blue-script/url-shortener/internal/stat"
 	"github.com/blue-script/url-shortener/internal/user"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -17,8 +18,9 @@ func main() {
 	}
 
 	db, err := gorm.Open(postgres.Open(os.Getenv("DSN")), &gorm.Config{})
+
 	if err != nil {
 		panic(err)
 	}
-	db.AutoMigrate(&link.Link{}, &user.User{})
+	db.AutoMigrate(&link.Link{}, &user.User{}, &stat.Stat{})
 }

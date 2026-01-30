@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/blue-script/url-shortener/configs"
+	"github.com/blue-script/url-shortener/pkg/di"
 	"github.com/blue-script/url-shortener/pkg/middleware"
 	"github.com/blue-script/url-shortener/pkg/req"
 	"github.com/blue-script/url-shortener/pkg/res"
@@ -14,21 +15,25 @@ import (
 
 type LinkHandlerDeps struct {
 	LinkRepository *LinkRepository
+	StatRepository di.IStatRepository
 	Config         *configs.Config
 }
 
 type LinkHandler struct {
 	LinkRepository *LinkRepository
+	StatRepository di.IStatRepository
 }
 
 func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 	handler := &LinkHandler{
 		LinkRepository: deps.LinkRepository,
+		StatRepository: deps.StatRepository,
 	}
 	router.HandleFunc("POST /link", handler.Create())
 	router.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.Update(), deps.Config))
 	router.HandleFunc("DELETE /link/{id}", handler.Delete())
 	router.HandleFunc("GET /{hash}", handler.GoTo())
+	router.Handle("GET /link", middleware.IsAuthed(handler.GetAll(), deps.Config))
 }
 
 func (handler *LinkHandler) Create() http.HandlerFunc {
@@ -59,7 +64,7 @@ func (handler *LinkHandler) Update() http.HandlerFunc {
 		email, ok := r.Context().Value(middleware.ContextEmailKey).(string)
 		if ok {
 			fmt.Printf("Email: %v\n", email)
-		} 
+		}
 		body, err := req.HandleBody[LinkUpdateRequest](&w, r)
 		if err != nil {
 			return
@@ -103,6 +108,7 @@ func (handler *LinkHandler) Delete() http.HandlerFunc {
 		res.Json(w, nil, 200)
 	}
 }
+
 func (handler *LinkHandler) GoTo() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		hash := r.PathValue("hash")
@@ -112,6 +118,28 @@ func (handler *LinkHandler) GoTo() http.HandlerFunc {
 			return
 		}
 
+		handler.StatRepository.AddClick(link.ID)
 		http.Redirect(w, r, link.Url, http.StatusTemporaryRedirect)
+	}
+}
+
+func (handler *LinkHandler) GetAll() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+		if err != nil {
+			http.Error(w, "Invalid limit", http.StatusBadRequest)
+		}
+		offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+		if err != nil {
+			http.Error(w, "Invalid offset", http.StatusBadRequest)
+		}
+
+		links := handler.LinkRepository.GetAll(limit, offset)
+		count := handler.LinkRepository.Count()
+		data := &GetAllLinksResponse{
+			Links: links,
+			Count: count,
+		}
+		res.Json(w, data, http.StatusOK)
 	}
 }
