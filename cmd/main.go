@@ -1,10 +1,8 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/blue-script/url-shortener/configs"
 	"github.com/blue-script/url-shortener/internal/auth"
@@ -16,20 +14,7 @@ import (
 	"github.com/blue-script/url-shortener/pkg/middleware"
 )
 
-func tickOperation(ctx context.Context) {
-	ticker := time.NewTicker(200 * time.Millisecond)
-	for {
-		select {
-		case <-ticker.C:
-			fmt.Println("Tick")
-		case <-ctx.Done():
-			fmt.Println("Cancel")
-			return
-		}
-	}
-}
-
-func main() {
+func App() http.Handler {
 	conf := configs.LoadConfig()
 	db := db.NewDb(conf)
 	router := http.NewServeMux()
@@ -62,18 +47,25 @@ func main() {
 		Config:         conf,
 	})
 
+	go statService.AddClick()
+
 	// Middlewares
 	stack := middleware.Chain(
 		middleware.CORS,
 		middleware.Logging,
 	)
 
+	return stack(router)
+}
+
+func main() {
+	app := App()
+
 	server := http.Server{
 		Addr:    ":8081",
-		Handler: stack(router),
+		Handler: app,
 	}
 
-	go statService.AddClick()
 	fmt.Println("Server is listening on port 8081")
 	server.ListenAndServe()
 }
