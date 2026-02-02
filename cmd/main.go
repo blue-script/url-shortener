@@ -12,6 +12,7 @@ import (
 	"github.com/blue-script/url-shortener/internal/stat"
 	"github.com/blue-script/url-shortener/internal/user"
 	"github.com/blue-script/url-shortener/pkg/db"
+	"github.com/blue-script/url-shortener/pkg/event"
 	"github.com/blue-script/url-shortener/pkg/middleware"
 )
 
@@ -32,6 +33,7 @@ func main() {
 	conf := configs.LoadConfig()
 	db := db.NewDb(conf)
 	router := http.NewServeMux()
+	eventBus := event.NewEventBus()
 
 	// Repositories
 	linkRepository := link.NewLinkRepository(db)
@@ -40,6 +42,10 @@ func main() {
 
 	// Services
 	authService := auth.NewAuthService(userRepository)
+	statService := stat.NewStatService(&stat.StatServiceDeps{
+		StatRepository: statRepository,
+		EventBus:       eventBus,
+	})
 
 	// Handler
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
@@ -48,6 +54,10 @@ func main() {
 	})
 	link.NewLinkHandler(router, link.LinkHandlerDeps{
 		LinkRepository: linkRepository,
+		EventBus:       eventBus,
+		Config:         conf,
+	})
+	stat.NewStatHandler(router, stat.StatHandlerDeps{
 		StatRepository: statRepository,
 		Config:         conf,
 	})
@@ -63,6 +73,7 @@ func main() {
 		Handler: stack(router),
 	}
 
+	go statService.AddClick()
 	fmt.Println("Server is listening on port 8081")
 	server.ListenAndServe()
 }
